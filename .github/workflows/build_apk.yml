@@ -23,7 +23,7 @@ jobs:
       - name: 🐦 Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0' # أو حسب إصدار الفلاتر الذي تستخدمه
+          flutter-version: '3.47.8' # أو حسب إصدار الفلاتر الذي تستخدمه
           cache: true
 
       - name: 📦 Install Dependencies
