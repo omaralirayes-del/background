@@ -69,46 +69,60 @@ class _LocalRemoveBgScreenState extends State<LocalRemoveBgScreen> {
   }
 
   Future<void> _removeBgLocally() async {
-    if (_selectedImage == null) return;
+   
+if (_selectedImage == null) return;
 
+  try {
+    // تشغيل مؤشر التحميل
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      Uint8List imageBytes = await _selectedImage!.readAsBytes();
+    // 2. قراءة بايتات الصورة الأصلية
+    Uint8List imageBytes = await _selectedImage!.readAsBytes();
 
-      // الناتج هنا نوعه dynamic أو ui.Image حسب المكتبة
-      var resultImage = await BackgroundRemover.instance.removeBg(
-        imageBytes,
-        threshold: 0.3,
-        smoothMask: true,
+    // 3. استدعاء مكتبة إزالة الخلفية
+    var resultImage = await BackgroundRemover.instance.removeBg(
+      imageBytes,
+      threshold: 0.3,
+      smoothMask: true,
+    );
+
+    // 4. التحقق من أن النتيجة صحيحة وليست null
+    
+      // 5. التحويل الآمن إلى ByteData ثم إلى Uint8List
+      final byteData = await resultImage.toByteData(
+        format: ui.ImageByteFormat.png,
       );
 
-      if (resultImage != null) {
-        // بما أن الناتجة ui.Image، نحتاج لتحويلها إلى Uint8List (PNG bytes)
-        // أو إذا كانت المكتبة تعيد ui.Image مباشرة:
-
-        // إذا أردت تحويل ui.Image إلى ByteData ثم Uint8List:
-        final byteData = await resultImage.toByteData(
-          format: ui.ImageByteFormat.png,
-        );
-        final Uint8List pngBytes = byteData!.buffer.asUint8List();
-
+      if (byteData != null) {
+        final Uint8List pngBytes = byteData.buffer.asUint8List();
+        
+        // 6. تحديث الواجهة بالصورة الناتجة وإيقاف التحميل
         setState(() {
           _processedImageBytes = pngBytes;
+          _isLoading = false;
         });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("حدث خطأ أثناء المعالجة: $e")));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+      } 
+  } catch (e) {
+    // 7. التقاط أي خطأ غير متوقع ومنع التطبيق من الانهيار
+    print("حدث استثناء (Exception) أثناء المعالجة: $e");
+    setState(() {
+      _isLoading = false;
+    });
+    
+    // يمكنك هنا إظهار رسالة بسيطة للمستخدم إذا أردت
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("حدث خطأ أثناء معالجة الصورة: $e"),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+    );
   }
-
+}
   Future<void> _downloadphoto(dynamic imagebybytes) async {
     try {
       bool hasAccess = await Gal.hasAccess();
