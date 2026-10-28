@@ -1,9 +1,7 @@
-name: Build Flutter APK
+name: Build Optimized APK
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
 
 jobs:
@@ -23,20 +21,20 @@ jobs:
       - name: 🐦 Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.8' # أو حسب إصدار الفلاتر الذي تستخدمه
+          flutter-version: '3.47.8' # أو إصدار مشروعك المتوافق
           cache: true
 
       - name: 📦 Install Dependencies
         run: flutter pub get
 
-      - name: 🚀 Build Split APKs (v7 & v8 with Max Optimization)
+      - name: 🚀 Build Release APK (arm64-v8a only, Max Compression)
         run: |
           flutter build apk --release \
-            --split-per-abi \
+            --target-platform android-arm64 \
             --no-tree-shake-icons
 
-      - name: 📤 Upload APK Artifacts
+      - name: 📤 Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: optimized-apks
-          path: build/app/outputs/flutter-apk/
+          name: v8-optimized-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
